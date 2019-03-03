@@ -1,0 +1,48 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{ .Values.global.name }}
+spec:
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.global.name }}
+        release: {{ .Release.Name }}
+        heritage: {{ .Release.Service }}
+    spec:
+      terminationGracePeriodSeconds: 5
+      containers:
+      - name: server
+        image: {{ template "cartservice.image" . }}
+        ports:
+        - containerPort: {{ .Values.image.port }}
+        env:
+        - name: REDIS_ADDR
+          value: "redis-cart:6379"
+        - name: PORT
+          value: {{ .Values.image.port | quote }}
+        - name: LISTEN_ADDR
+          value: "0.0.0.0"
+        readinessProbe:
+          initialDelaySeconds: 15
+          exec:
+            command: ["/bin/grpc_health_probe", "-addr=:7070"]
+        livenessProbe:
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          exec:
+            command: ["/bin/grpc_health_probe", "-addr=:50051"]
+        resources:
+{{ toYaml .Values.resources | indent 10 }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.global.name }}
+spec:
+  type: {{ .Values.service.type }}
+  selector:
+    app: {{ .Values.global.name }}
+  ports:
+{{ toYaml .Values.service.ports | indent 2 }}

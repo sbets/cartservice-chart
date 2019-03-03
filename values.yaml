@@ -1,0 +1,27 @@
+## Images
+image:
+  registry: gcr.io
+  repository: google-samples/microservices-demo/cartservice
+  tag: v0.1.0
+  pullPolicy: Always
+  port: 7070
+  cmd: ["/bin/grpc_health_probe", "-addr=:7070"]
+
+global:
+  imageRegistry: gcr.io
+  name: cartservice
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 64Mi
+  limits:
+    cpu: 300m
+    memory: 128Mi
+
+service:
+  type: ClusterIP
+  ports:
+    - name: grpc
+      port: 7070
+      targetPort: 7070
